@@ -16,18 +16,18 @@ def get_all_keys(block_ids, data):
     return sorted(set(keys))
 
 def xstr(s):
+    """ Convert JSON value to string"""
     if s is None:
         return ''
     return str(s)
 
 def insert_data(block_dict, columns, timestamp):
+    """ Generate data tuple for connector.execute()"""
     insert_list = []
     for col in columns:
         insert_list.append(xstr(block_dict.get(col)))
     insert_list.append(timestamp)
     return tuple(insert_list)
-
-
 
 # Load data from API
 url = "http://analytics.skillfactory.ru:5000/api/v1.0/get_structure_course/"
@@ -49,34 +49,25 @@ for col in columns:
 
 create_string = "CREATE TABLE course_structure (" + column_create_string + " update_time DATETIME)"
 insert_string = "INSERT INTO course_structure (" + column_insert_string + " update_time) VALUES(" + "%s," * (len(columns)) + "%s)"
-#print(create_string)
-#print(insert_string)
-
-
-
-# Generate queries for data insertion
-#for block_id in list(block_ids)[0:10]:
-#    print(insert_data(data['blocks'][block_id], columns, timestamp))
-#    print("--------")
-
-
-
-
 
 try:
-    cnx = mysql.connector.connect(user='badmovich', password='badmovich',
-                              host='db4free.net',
-                              database='badmovich', use_pure = True)
+    # Connect to DB
+    cnx = mysql.connector.connect(user='XXX', password='XXX',
+                              host='XXX',
+                              database='XXX')
     cursor = cnx.cursor()
+
+    # Drop table and create new
     cursor.execute("DROP TABLE IF EXISTS course_structure")
     cursor.execute(create_string)
 
+    # Get current time
     ts = time.time()
     timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
+    # Get block data and insert to DB
     for block_id in list(block_ids):
         sql_data = insert_data(data['blocks'][block_id], columns, timestamp)
-        #print(sql_data)
         cursor.execute(insert_string, sql_data)
         cnx.commit()
     
